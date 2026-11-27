@@ -1,18 +1,11 @@
-using System.ComponentModel.DataAnnotations;
-
-namespace DoctorAppointment.Backend.Models
+namespace DoctorAppointment.Api.Models
 {
     public class Specialization
     {
-        [Key]
         public int Id { get; set; }
-
-        [Required]
-        [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
-
-        [MaxLength(500)]
-        public string? Description { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
 
         // Navigation
         public ICollection<Doctor> Doctors { get; set; } = new List<Doctor>();

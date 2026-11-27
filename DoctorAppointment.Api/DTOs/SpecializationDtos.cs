@@ -1,32 +1,24 @@
-using System.ComponentModel.DataAnnotations;
-
-namespace DoctorAppointment.Backend.DTOs
+namespace DoctorAppointment.Api.DTOs
 {
-    public class SpecializationResponseDto
+    public class SpecializationDto
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
         public int DoctorCount { get; set; }
     }
 
     public class CreateSpecializationDto
     {
-        [Required]
-        [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
-
-        [MaxLength(500)]
-        public string? Description { get; set; }
+        public string Description { get; set; } = string.Empty;
     }
 
     public class UpdateSpecializationDto
     {
-        [Required]
-        [MaxLength(100)]
-        public string Name { get; set; } = string.Empty;
-
-        [MaxLength(500)]
+        public string? Name { get; set; }
         public string? Description { get; set; }
+        public bool? IsActive { get; set; }
     }
 }

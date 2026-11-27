@@ -1,13 +1,13 @@
-using DoctorAppointment.Backend.DTOs;
+using DoctorAppointment.Api.DTOs;
 
-namespace DoctorAppointment.Backend.Interfaces
+namespace DoctorAppointment.Api.Interfaces
 {
     public interface ISpecializationService
     {
-        Task<IEnumerable<SpecializationResponseDto>> GetAllSpecializationsAsync();
-        Task<SpecializationResponseDto?> GetSpecializationByIdAsync(int id);
-        Task<SpecializationResponseDto> CreateSpecializationAsync(CreateSpecializationDto dto);
-        Task<SpecializationResponseDto> UpdateSpecializationAsync(int id, UpdateSpecializationDto dto);
-        Task<bool> DeleteSpecializationAsync(int id);
+        Task<IEnumerable<SpecializationDto>> GetAllAsync();
+        Task<SpecializationDto?> GetByIdAsync(int id);
+        Task<SpecializationDto> CreateAsync(CreateSpecializationDto dto);
+        Task<SpecializationDto?> UpdateAsync(int id, UpdateSpecializationDto dto);
+        Task<bool> DeleteAsync(int id);
     }
 }
