@@ -1,14 +1,13 @@
-using System.Security.Claims;
+using DoctorAppointment.Api.DTOs;
+using DoctorAppointment.Api.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using DoctorAppointment.Backend.DTOs;
-using DoctorAppointment.Backend.Enums;
-using DoctorAppointment.Backend.Interfaces;
 
-namespace DoctorAppointment.Backend.Controllers
+namespace DoctorAppointment.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class PatientsController : ControllerBase
     {
         private readonly IPatientService _patientService;
@@ -18,72 +17,47 @@ namespace DoctorAppointment.Backend.Controllers
             _patientService = patientService;
         }
 
-        [Authorize(Roles = "Admin,Doctor")]
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<PatientResponseDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAll()
+        [Authorize(Roles = "Admin,Doctor")]
+        public async Task<IActionResult> GetAll([FromQuery] string? search = null)
         {
-            var patients = await _patientService.GetAllPatientsAsync();
+            var patients = await _patientService.GetAllAsync(search);
             return Ok(patients);
         }
 
-        [Authorize]
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(PatientResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin,Doctor,Patient")]
         public async Task<IActionResult> GetById(int id)
         {
-            var role = User.FindFirst(ClaimTypes.Role)?.Value;
-            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                         ?? User.FindFirst("UserId")?.Value;
-
-            if (role == UserRole.Patient.ToString() && int.TryParse(userIdStr, out var userId))
-            {
-                var currentPatient = await _patientService.GetPatientByUserIdAsync(userId);
-                if (currentPatient == null || currentPatient.Id != id)
-                {
-                    return Forbid();
-                }
-            }
-
-            var patient = await _patientService.GetPatientByIdAsync(id);
-            if (patient == null)
-            {
-                return NotFound(new { message = $"Patient with ID {id} not found." });
-            }
-
+            var patient = await _patientService.GetByIdAsync(id);
+            if (patient == null) return NotFound(new { message = "Patient not found." });
             return Ok(patient);
         }
 
-        [Authorize(Roles = "Patient,Admin")]
+        [HttpGet("by-user/{userId}")]
+        public async Task<IActionResult> GetByUserId(int userId)
+        {
+            var patient = await _patientService.GetByUserIdAsync(userId);
+            if (patient == null) return NotFound(new { message = "Patient not found." });
+            return Ok(patient);
+        }
+
         [HttpPut("{id}")]
-        [ProducesResponseType(typeof(PatientResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin,Patient")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdatePatientDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            var patient = await _patientService.UpdateAsync(id, dto);
+            if (patient == null) return NotFound(new { message = "Patient not found." });
+            return Ok(patient);
+        }
 
-            var role = User.FindFirst(ClaimTypes.Role)?.Value;
-            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                         ?? User.FindFirst("UserId")?.Value;
-
-            if (role == UserRole.Patient.ToString() && int.TryParse(userIdStr, out var userId))
-            {
-                var currentPatient = await _patientService.GetPatientByUserIdAsync(userId);
-                if (currentPatient == null || currentPatient.Id != id)
-                {
-                    return Forbid();
-                }
-            }
-
-            var updated = await _patientService.UpdatePatientAsync(id, dto);
-            return Ok(updated);
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var result = await _patientService.DeleteAsync(id);
+            if (!result) return NotFound(new { message = "Patient not found." });
+            return NoContent();
         }
     }
 }

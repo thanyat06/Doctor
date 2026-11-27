@@ -1,12 +1,13 @@
-using DoctorAppointment.Backend.DTOs;
+using DoctorAppointment.Api.DTOs;
 
-namespace DoctorAppointment.Backend.Interfaces
+namespace DoctorAppointment.Api.Interfaces
 {
     public interface IPatientService
     {
-        Task<IEnumerable<PatientResponseDto>> GetAllPatientsAsync();
-        Task<PatientResponseDto?> GetPatientByIdAsync(int id);
-        Task<PatientResponseDto?> GetPatientByUserIdAsync(int userId);
-        Task<PatientResponseDto> UpdatePatientAsync(int id, UpdatePatientDto dto);
+        Task<IEnumerable<PatientDto>> GetAllAsync(string? search = null);
+        Task<PatientDto?> GetByIdAsync(int id);
+        Task<PatientDto?> GetByUserIdAsync(int userId);
+        Task<PatientDto?> UpdateAsync(int id, UpdatePatientDto dto);
+        Task<bool> DeleteAsync(int id);
     }
 }

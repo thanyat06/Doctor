@@ -1,115 +1,71 @@
-using Microsoft.EntityFrameworkCore;
-using DoctorAppointment.Backend.Data;
-using DoctorAppointment.Backend.DTOs;
-using DoctorAppointment.Backend.Interfaces;
-using DoctorAppointment.Backend.Models;
+using DoctorAppointment.Api.DTOs;
+using DoctorAppointment.Api.Interfaces;
+using DoctorAppointment.Api.Models;
+using DoctorAppointment.Api.Repositories.Interfaces;
 
-namespace DoctorAppointment.Backend.Services
+namespace DoctorAppointment.Api.Services
 {
     public class PatientService : IPatientService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IPatientRepository _patientRepository;
 
-        public PatientService(ApplicationDbContext context)
+        public PatientService(IPatientRepository patientRepository)
         {
-            _context = context;
+            _patientRepository = patientRepository;
         }
 
-        public async Task<IEnumerable<PatientResponseDto>> GetAllPatientsAsync()
+        public async Task<IEnumerable<PatientDto>> GetAllAsync(string? search = null)
         {
-            return await _context.Patients
-                .Include(p => p.User)
-                .OrderBy(p => p.User.FullName)
-                .Select(p => MapToResponseDto(p))
-                .ToListAsync();
+            var patients = await _patientRepository.GetAllAsync(search);
+            return patients.Select(MapToDto);
         }
 
-        public async Task<PatientResponseDto?> GetPatientByIdAsync(int id)
+        public async Task<PatientDto?> GetByIdAsync(int id)
         {
-            var patient = await _context.Patients
-                .Include(p => p.User)
-                .FirstOrDefaultAsync(p => p.Id == id);
-
-            return patient == null ? null : MapToResponseDto(patient);
+            var patient = await _patientRepository.GetByIdAsync(id);
+            return patient == null ? null : MapToDto(patient);
         }
 
-        public async Task<PatientResponseDto?> GetPatientByUserIdAsync(int userId)
+        public async Task<PatientDto?> GetByUserIdAsync(int userId)
         {
-            var patient = await _context.Patients
-                .Include(p => p.User)
-                .FirstOrDefaultAsync(p => p.UserId == userId);
-
-            return patient == null ? null : MapToResponseDto(patient);
+            var patient = await _patientRepository.GetByUserIdAsync(userId);
+            return patient == null ? null : MapToDto(patient);
         }
 
-        public async Task<PatientResponseDto> UpdatePatientAsync(int id, UpdatePatientDto dto)
+        public async Task<PatientDto?> UpdateAsync(int id, UpdatePatientDto dto)
         {
-            var patient = await _context.Patients
-                .Include(p => p.User)
-                .FirstOrDefaultAsync(p => p.Id == id);
+            var patient = await _patientRepository.GetByIdAsync(id);
+            if (patient == null) return null;
 
-            if (patient == null)
-            {
-                throw new KeyNotFoundException($"Patient with ID {id} not found.");
-            }
+            if (dto.Name != null) patient.User.Name = dto.Name;
+            if (dto.PhoneNumber != null) patient.PhoneNumber = dto.PhoneNumber;
+            if (dto.DateOfBirth.HasValue) patient.DateOfBirth = dto.DateOfBirth.Value;
+            if (dto.BloodGroup != null) patient.BloodGroup = dto.BloodGroup;
+            if (dto.Address != null) patient.Address = dto.Address;
+            if (dto.EmergencyContact != null) patient.EmergencyContact = dto.EmergencyContact;
 
-            if (!string.IsNullOrWhiteSpace(dto.FullName))
-            {
-                patient.User.FullName = dto.FullName.Trim();
-                patient.User.UpdatedAt = DateTime.UtcNow;
-            }
-
-            if (dto.PhoneNumber != null)
-            {
-                patient.User.PhoneNumber = dto.PhoneNumber.Trim();
-                patient.User.UpdatedAt = DateTime.UtcNow;
-            }
-
-            if (dto.DateOfBirth.HasValue)
-            {
-                patient.DateOfBirth = dto.DateOfBirth.Value;
-            }
-
-            if (dto.Gender != null)
-            {
-                patient.Gender = dto.Gender.Trim();
-            }
-
-            if (dto.BloodGroup != null)
-            {
-                patient.BloodGroup = dto.BloodGroup.Trim();
-            }
-
-            if (dto.Address != null)
-            {
-                patient.Address = dto.Address.Trim();
-            }
-
-            if (dto.EmergencyContact != null)
-            {
-                patient.EmergencyContact = dto.EmergencyContact.Trim();
-            }
-
-            await _context.SaveChangesAsync();
-
-            return MapToResponseDto(patient);
+            await _patientRepository.UpdateAsync(patient);
+            var updated = await _patientRepository.GetByIdAsync(id);
+            return MapToDto(updated!);
         }
 
-        private static PatientResponseDto MapToResponseDto(Patient patient)
+        public async Task<bool> DeleteAsync(int id)
         {
-            return new PatientResponseDto
-            {
-                Id = patient.Id,
-                UserId = patient.UserId,
-                FullName = patient.User.FullName,
-                Email = patient.User.Email,
-                PhoneNumber = patient.User.PhoneNumber,
-                DateOfBirth = patient.DateOfBirth,
-                Gender = patient.Gender,
-                BloodGroup = patient.BloodGroup,
-                Address = patient.Address,
-                EmergencyContact = patient.EmergencyContact
-            };
+            return await _patientRepository.DeleteAsync(id);
         }
+
+        private static PatientDto MapToDto(Patient p) => new PatientDto
+        {
+            Id = p.Id,
+            UserId = p.UserId,
+            Name = p.User.Name,
+            Email = p.User.Email,
+            PhoneNumber = p.PhoneNumber,
+            DateOfBirth = p.DateOfBirth,
+            BloodGroup = p.BloodGroup,
+            Address = p.Address,
+            EmergencyContact = p.EmergencyContact,
+            CreatedAt = p.CreatedAt
+        };
     }
 }
