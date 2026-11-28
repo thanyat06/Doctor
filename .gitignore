@@ -1,0 +1,12 @@
+# Node / Angular
+node_modules/
+dist/
+.angular/
+
+# Visual Studio
+.vs/
+bin/
+obj/
+
+# Environment files
+.env
