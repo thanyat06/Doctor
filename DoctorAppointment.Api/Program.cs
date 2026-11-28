@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
-using DoctorAppointment.Backend.Data;
-using DoctorAppointment.Backend.Interfaces;
-using DoctorAppointment.Backend.Middleware;
-using DoctorAppointment.Backend.Services;
+using DoctorAppointment.Api.Data;
+using DoctorAppointment.Api.Interfaces;
+using DoctorAppointment.Api.Middleware;
+using DoctorAppointment.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

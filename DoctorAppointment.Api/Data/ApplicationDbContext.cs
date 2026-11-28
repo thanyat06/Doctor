@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using DoctorAppointment.Backend.Enums;
-using DoctorAppointment.Backend.Models;
+using DoctorAppointment.Api.Enums;
+using DoctorAppointment.Api.Models;
 
-namespace DoctorAppointment.Backend.Data
+namespace DoctorAppointment.Api.Data
 {
     public class ApplicationDbContext : DbContext
     {

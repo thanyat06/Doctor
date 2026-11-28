@@ -3,10 +3,10 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using DoctorAppointment.Backend.Interfaces;
-using DoctorAppointment.Backend.Models;
+using DoctorAppointment.Api.Interfaces;
+using DoctorAppointment.Api.Models;
 
-namespace DoctorAppointment.Backend.Services
+namespace DoctorAppointment.Api.Services
 {
     public class TokenService : ITokenService
     {

@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
 
-namespace DoctorAppointment.Backend.Middleware
+namespace DoctorAppointment.Api.Middleware
 {
     public class ExceptionMiddleware
     {

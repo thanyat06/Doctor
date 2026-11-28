@@ -1,6 +1,6 @@
-using DoctorAppointment.Backend.Models;
+using DoctorAppointment.Api.Models;
 
-namespace DoctorAppointment.Backend.Interfaces
+namespace DoctorAppointment.Api.Interfaces
 {
     public interface ITokenService
     {

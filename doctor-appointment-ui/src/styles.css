@@ -1,0 +1,32 @@
+/* Global styles for the Doctor Appointment System.
+   Feature-specific styles remain in their existing standalone components. */
+:root {
+  color-scheme: dark;
+  font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-width: 320px;
+  background: #0d1117;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
