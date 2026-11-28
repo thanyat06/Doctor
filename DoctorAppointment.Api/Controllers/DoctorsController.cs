@@ -1,14 +1,13 @@
-using System.Security.Claims;
+using DoctorAppointment.Api.DTOs;
+using DoctorAppointment.Api.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using DoctorAppointment.Backend.DTOs;
-using DoctorAppointment.Backend.Enums;
-using DoctorAppointment.Backend.Interfaces;
 
-namespace DoctorAppointment.Backend.Controllers
+namespace DoctorAppointment.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class DoctorsController : ControllerBase
     {
         private readonly IDoctorService _doctorService;
@@ -19,84 +18,56 @@ namespace DoctorAppointment.Backend.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<DoctorResponseDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAll([FromQuery] DoctorFilterDto filter)
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAll(
+            [FromQuery] string? search = null,
+            [FromQuery] int? specializationId = null,
+            [FromQuery] bool? isAvailable = null)
         {
-            var doctors = await _doctorService.GetAllDoctorsAsync(filter);
+            var doctors = await _doctorService.GetAllAsync(search, specializationId, isAvailable);
             return Ok(doctors);
         }
 
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(DoctorResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [AllowAnonymous]
         public async Task<IActionResult> GetById(int id)
         {
-            var doctor = await _doctorService.GetDoctorByIdAsync(id);
-            if (doctor == null)
-            {
-                return NotFound(new { message = $"Doctor with ID {id} not found." });
-            }
-
+            var doctor = await _doctorService.GetByIdAsync(id);
+            if (doctor == null) return NotFound(new { message = "Doctor not found." });
             return Ok(doctor);
         }
 
-        [Authorize(Roles = "Admin")]
+        [HttpGet("by-user/{userId}")]
+        public async Task<IActionResult> GetByUserId(int userId)
+        {
+            var doctor = await _doctorService.GetByUserIdAsync(userId);
+            if (doctor == null) return NotFound(new { message = "Doctor not found." });
+            return Ok(doctor);
+        }
+
         [HttpPost]
-        [ProducesResponseType(typeof(DoctorResponseDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateDoctorDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var created = await _doctorService.CreateDoctorAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            var doctor = await _doctorService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = doctor.Id }, doctor);
         }
 
-        [Authorize(Roles = "Doctor,Admin")]
         [HttpPut("{id}")]
-        [ProducesResponseType(typeof(DoctorResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin,Doctor")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateDoctorDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var role = User.FindFirst(ClaimTypes.Role)?.Value;
-            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                         ?? User.FindFirst("UserId")?.Value;
-
-            if (role == UserRole.Doctor.ToString() && int.TryParse(userIdStr, out var userId))
-            {
-                var currentDoctor = await _doctorService.GetDoctorByUserIdAsync(userId);
-                if (currentDoctor == null || currentDoctor.Id != id)
-                {
-                    return Forbid();
-                }
-            }
-
-            var updated = await _doctorService.UpdateDoctorAsync(id, dto);
-            return Ok(updated);
+            var doctor = await _doctorService.UpdateAsync(id, dto);
+            if (doctor == null) return NotFound(new { message = "Doctor not found." });
+            return Ok(doctor);
         }
 
-        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _doctorService.DeleteDoctorAsync(id);
-            if (!deleted)
-            {
-                return NotFound(new { message = $"Doctor with ID {id} not found." });
-            }
-
+            var result = await _doctorService.DeleteAsync(id);
+            if (!result) return NotFound(new { message = "Doctor not found." });
             return NoContent();
         }
     }
